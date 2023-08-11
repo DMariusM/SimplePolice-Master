@@ -37,27 +37,19 @@ public class JailGUI implements Listener {
 
             final ItemStack clickedItem = event.getCurrentItem();
             if (clickedItem != null && clickedItem.getType() != Material.AIR) {
-                double jailTime = ConfigValues.jailGUITimes[event.getRawSlot()-2];
-
                 UUID jailedPlayer = UUID.fromString(lastArrest.get(player.getUniqueId().toString()));
-                player.sendMessage(Messages.getMessage("JailTimePoliceMSG", Bukkit.getPlayer(jailedPlayer).getName(), String.valueOf(jailTime)));
 
-                Player bukkitJailedPlayer = Bukkit.getPlayer(jailedPlayer);
-                if (bukkitJailedPlayer != null) {
-                    if (!Jail.isJailed(jailedPlayer)) {
-                        bukkitJailedPlayer.sendMessage(Messages.getMessage("JailTimeMSG", String.valueOf(jailTime)));
-                    } else {
-                        bukkitJailedPlayer.sendMessage(Messages.getMessage("JailTimeChange", Utility.timeUnit((int) jailTime)));
-                    }
-                }
+                // dam jail imediat pentru 15 minute
+                Jail.jailPlayer(jailedPlayer, 900.0, currentJail.get(jailedPlayer.toString()));
 
-                Jail.jailPlayer(jailedPlayer, jailTime * 60, currentJail.get(jailedPlayer.toString()));
                 currentJail.remove(jailedPlayer.toString());
                 lastArrest.remove(player.getUniqueId().toString());
-                player.closeInventory();
+                // scoatem linia care inchide inventory-ul
+                // player.closeInventory();
             }
         }
     }
+
 
     @EventHandler
     public void preventShiftgui(InventoryMoveItemEvent event) {
@@ -84,27 +76,24 @@ public class JailGUI implements Listener {
     public Inventory createGUI(Player player) {
         Inventory guiInventory = Bukkit.createInventory(null, 9, guiName);
 
-        ItemStack[] guiItemstackList = new ItemStack[]{
-                LegacyUtils.getStainedClay(DyeColor.RED),
-                LegacyUtils.getStainedClay(DyeColor.ORANGE),
-                LegacyUtils.getStainedClay(DyeColor.YELLOW),
-                LegacyUtils.getStainedClay(DyeColor.LIME),
-                LegacyUtils.getStainedClay(DyeColor.LIGHT_BLUE)};
+        ItemStack guiItemStack = LegacyUtils.getStainedClay(DyeColor.RED); // sticla slot
 
-        double[] jailGUITimes = ConfigValues.jailGUITimes;
-        for (int i = 2; i < 7; i++) {
-            guiInventory.setItem(i, Utility.createGuiItem(guiItemstackList[i-2], Messages.getMessage("JailGUIBlock", String.valueOf(jailGUITimes[i-2]))));
+        double[] jailGUITimes = new double[]{900.0}; // punem doar 15 minute
+
+        for (int i = 2; i < 3; i++) {
+            guiInventory.setItem(i, Utility.createGuiItem(guiItemStack, Messages.getMessage("JailGUIBlock", String.valueOf(jailGUITimes[0]))));
         }
-
-
-
 
         return guiInventory;
     }
 
     public static void onPlayerArrest(Player police, Player arrestedPlayer, String jailName) {
-        (new JailGUI()).openInventory(police);
-        lastArrest.put(police.getUniqueId().toString(), arrestedPlayer.getUniqueId().toString());
-        currentJail.put(arrestedPlayer.getUniqueId().toString(), jailName);
+        UUID arrestedPlayerUUID = arrestedPlayer.getUniqueId();
+        double jailTime = 900.0; // punem 15 minute, 900 sec = 15 minute
+
+        Jail.jailPlayer(arrestedPlayerUUID, jailTime, jailName); // punem jucatorul in jail direct
+
+        lastArrest.put(police.getUniqueId().toString(), arrestedPlayerUUID.toString());
+        currentJail.put(arrestedPlayerUUID.toString(), jailName);
     }
 }

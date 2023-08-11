@@ -88,17 +88,25 @@ public class Jail implements Listener {
         }
     }
 
-    public static void jailPlayer(UUID player, Double jailTime) {
-        Player bukkitPlayer = Bukkit.getPlayer(player);
+    public static void jailPlayer(UUID player) {
+        double jailTimeTicks = 18000.0; // 15 minute in ticks
         String jailName = getJail();
-        if (bukkitPlayer != null) {
-            if (!previousLocation.containsKey(player.toString())) {
-                previousLocation.put(player.toString(), bukkitPlayer.getLocation());
-                bukkitPlayer.teleport(getJailLocation(jailName));
-            }
+        jailPlayer(player, jailTimeTicks, jailName);
+    }
+
+    public static void jailPlayer(UUID player, String jailName) {
+        double jailTimeTicks = 18000.0; // 15 minute in ticks
+        jailPlayer(player, jailTimeTicks, jailName);
+    }
+
+    private static void jailPlayer(UUID player, double jailTimeTicks, String jailName) {
+        Player bukkitPlayer = Bukkit.getPlayer(player);
+        if (bukkitPlayer != null && !previousLocation.containsKey(player.toString())) {
+            previousLocation.put(player.toString(), bukkitPlayer.getLocation());
+            bukkitPlayer.teleport(getJailLocation(jailName));
         }
         setCooldown(player, System.currentTimeMillis());
-        sentenceLength.put(player.toString(), jailTime);
+        sentenceLength.put(player.toString(), jailTimeTicks / 20.0); // schimbam din ticks in secunde
 
         if (scheduledUnjails.containsKey(player.toString())) {
             Bukkit.getScheduler().cancelTask(scheduledUnjails.get(player.toString()));
@@ -110,11 +118,11 @@ public class Jail implements Listener {
             if (bukkitPlayer != null) {
                 bukkitPlayer.sendMessage(Messages.getMessage("JailRelease"));
             }
-        }, (long) (jailTime * 20));
+        }, (long) jailTimeTicks);
 
         scheduledUnjails.put(player.toString(), id);
 
-        EventManager.runPlayerJailEvent(Bukkit.getPlayer(player), jailName, jailTime);
+        EventManager.runPlayerJailEvent(Bukkit.getPlayer(player), jailName, jailTimeTicks / 20.0); // schimbam din ticks inapoi in secunde
     }
 
     public static void jailPlayer(UUID player, Double jailTime, String jailName) {

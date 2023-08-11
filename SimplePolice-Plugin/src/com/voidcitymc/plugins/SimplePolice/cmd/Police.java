@@ -337,7 +337,7 @@ public class Police implements Listener, CommandExecutor {
                                 JailGUI.onPlayerArrest((Player) sender, jailedPlayer, jailName);
                                 EventManager.runPlayerArrestEvent((Player) sender, jailedPlayer, Jail.previousLocation.get(jailedPlayer.getUniqueId().toString()));
                             } else {
-                                double jailTimeDouble = 300;
+                                double jailTimeDouble = 900; //schimbam din 300 (5 minute) in 900 (15 minute)
                                 try {
                                     jailTimeDouble = Double.parseDouble(jailTime);
                                 } catch (NumberFormatException ignored) {
